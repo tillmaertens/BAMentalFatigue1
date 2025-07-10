@@ -1,0 +1,288 @@
+{% block title %}Recruiter{% endblock %}
+
+{% block content %}
+
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .recruiter-container {
+            display: flex;
+            height: auto;
+            gap: 20px;
+            min-height: 500px;
+        }
+
+        /* Video meeting placeholder */
+        .left-panel {
+            flex: 1;
+            background-color: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #666;
+            min-height: 400px;
+        }
+
+        /* Applicant information */
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+        }
+
+        /* Applicant selection buttons */
+        .applicant-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .applicant-tab {
+            background-color: lightblue;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .applicant-tab:hover {
+            background-color: #87CEEB;
+        }
+
+        .applicant-tab.active {
+            background-color: #4682B4;
+            color: white;
+        }
+
+
+        .applicant-content {
+            display: none;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .applicant-content.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .recruiter-mask {
+            background-color: #f9f9f9;
+            border: 2px solid #ccc;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            color: #333;
+            font-style: normal;
+            width: 100%;
+            max-width: 500px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5
+        }
+
+        .recruiter-mask h2,
+        .recruiter-mask h3 {
+            color: #2c3e50;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .recruiter-mask p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .recruiter-mask table {
+            margin: 10px 0;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .recruiter-mask td {
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+
+        .document-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: nowrap;
+        }
+
+        .doc-button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .doc-button:hover {
+            background-color: #218838;
+        }
+
+        .skip {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .skip-button {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .session-info-bar {
+            background: #e3f2fd;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+    </style>
+
+    <div class="skip">
+        <button onclick="skipSession()"
+                class="skip-button">
+            Skip Session
+        </button>
+    </div>
+
+    <div class="session-info-bar">
+        <strong>Session {{ session_number }} of 6</strong>
+    </div>
+
+    <div class="recruiter-container">
+        <div class="left-panel">
+            <div>Video Meeting Placeholder</div>
+        </div>
+
+        <div class="right-panel">
+            <!-- Applicant Selection Tabs -->
+            <div class="applicant-tabs">
+                {% for applicant in applicants %}
+                    <button type="button" class="applicant-tab"
+                            onclick="showApplicant(event, '{{ applicant.id }}')">{{ applicant.name }}</button>
+                {% endfor %}
+            </div>
+
+            <!-- Applicant Content (dynamic?) -->
+            {% for applicant in applicants %}
+                <div id="applicant-{{ applicant.id }}" class="applicant-content">
+                    <div class="recruiter-mask">
+                        {{ applicant.description }}
+                    </div>
+                    <div class="document-buttons">
+                        <button type="button" class="doc-button"
+                                onclick="openPDF(event, '{{ applicant.documents.cv }}')">CV
+                        </button>
+                        <button type="button" class="doc-button"
+                                onclick="openPDF(event, '{{ applicant.documents.job_reference }}')">Job Reference
+                        </button>
+                        <button type="button" class="doc-button"
+                                onclick="openPDF(event, '{{ applicant.documents.cover_letter }}')">Cover Letter
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Applicant data from backend
+        const applicantsData = {{ applicants|safe }};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Recruiter page loaded');
+            console.log('Applicants data:', applicantsData);
+
+            // Set first applicant as active
+            const firstTab = document.querySelector('.applicant-tab');
+            const firstContent = document.querySelector('.applicant-content');
+
+            if (firstTab && firstContent) {
+                firstTab.classList.add('active');
+                firstContent.classList.add('active');
+            }
+
+            console.log('Recruiter page initialization complete');
+        });
+
+        function showApplicant(event, applicantId) {
+            event.preventDefault();
+
+            const contents = document.querySelectorAll('.applicant-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const tabs = document.querySelectorAll('.applicant-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById('applicant-' + applicantId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function skipSession() {
+            if (confirm('Skip this session?')) {
+                document.querySelector('form').submit();
+            }
+        }
+
+        function openPDF(event, pdfPath) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const fullPath = '/static/applicants/' + pdfPath;
+            const newWindow = window.open(fullPath, '_blank', 'noopener,noreferrer');
+
+            if (newWindow) {
+                newWindow.focus();
+            }
+
+            return false;
+        }
+    </script>
+
+{% endblock %}
