@@ -201,20 +201,6 @@ class Group(BaseGroup):
     def set_evaluation_data(self, data_dict):
         self.evaluation_data = json.dumps(data_dict)
 
-    def calculate_session_metrics(self):
-        """Calculate performance metrics for this session"""
-        evaluation = self.get_evaluation_data()
-
-        self.total_criteria_added = len(evaluation)
-
-        total_possible_scores = len(evaluation) * 3
-        filled_scores = 0
-
-        for criterion_data in evaluation.values():
-            scores = criterion_data.get('scores', {})
-            filled_scores += len([s for s in scores.values() if s])
-
-        self.session_completion_rate = (filled_scores / total_possible_scores * 100) if total_possible_scores > 0 else 0
 
 
 class Player(BasePlayer):

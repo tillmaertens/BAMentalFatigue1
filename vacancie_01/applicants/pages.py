@@ -225,9 +225,6 @@ class SessionComplete(WaitPage):
         # Record session end time
         group.session_end_time = time.time()
 
-        # Calculate session metrics
-        group.calculate_session_metrics()
-
         # Update player end timestamps
         for player in group.get_players():
             player.session_end_timestamp = time.time()
